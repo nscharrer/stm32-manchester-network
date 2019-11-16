@@ -1,3 +1,11 @@
+# Eclipse project files
+CMSIS/*
+Debug/*
+LinkerScript.ld
+NUCLEO-F446RE.xml
+StdPeriph_Driver/*
+startup/*
+
 # Prerequisites
 *.d
 
