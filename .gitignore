@@ -1,10 +1,17 @@
 # Eclipse project files
-CMSIS/*
-Debug/*
-LinkerScript.ld
-NUCLEO-F446RE.xml
-StdPeriph_Driver/*
-startup/*
+Milestone3_take2/CMSIS/*
+Milestone3_take2/Debug/*
+Milestone3_take2/LinkerScript.ld
+Milestone3_take2/NUCLEO-F446RE.xml
+Milestone3_take2/StdPeriph_Driver/*
+Milestone3_take2/startup/*
+Milestone3_take2/Milestone3_take2 Debug.cfg
+Milestone3_take2/.cproject
+Milestone3_take2/.project
+Milestone3_take2/.settings/language.settings.xml
+Milestone3_take2/src/syscalls.c
+Milestone3_take2/src/system_stm32f4xx.c
+Milestone3_take2/inc/stm32f4xx_it.h
 
 # Prerequisites
 *.d
