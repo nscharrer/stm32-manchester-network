@@ -35,7 +35,6 @@ void tester(void)
 
 int main(void)
 {
-
 	// Enable low power mode debugging
 	DBGMCU_Config(DBGMCU_SLEEP, ENABLE);
 	DBGMCU_Config(DBGMCU_STOP, ENABLE);

@@ -44,7 +44,7 @@ void buildFrame(char *data, int size)
 	frame[5] = frame_crc_flag;
 
 	int length = size;
-	for(int i; i < length; i++)
+	for(int i = 0; i < length; i++)
 	{
 		frame[i + 6] = data[i];
 	}
@@ -117,7 +117,6 @@ void ResetTIM3Cnt(void)
 
 void DisableTIM3(void)
 {
-
 	TIM_Cmd(TIM3, DISABLE);
 	ResetTIM3Cnt();
 }

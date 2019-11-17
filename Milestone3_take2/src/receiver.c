@@ -37,7 +37,7 @@ void InitReceiverTimer(void)
 
 	//TIM_Cmd(TIM4, ENABLE);
 
-	//TIM_ITConfig(TIM4, TIM_IT_Update, ENABLE);
+	TIM_ITConfig(TIM4, TIM_IT_Update, ENABLE);
 
 	// Set up the timer interrupts
 	NVIC_InitTypeDef NVICInitStructure;
@@ -46,6 +46,8 @@ void InitReceiverTimer(void)
 	NVICInitStructure.NVIC_IRQChannelSubPriority = 4;
 	NVICInitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVICInitStructure);
+
+	NVIC_DisableIRQ(TIM4_IRQn);
 
 	ClearReceiverArr();
 }
@@ -122,14 +124,15 @@ void EnableReceiver(void)
 {
 
 	TIM_Cmd(TIM4, ENABLE);
-	TIM_ITConfig(TIM4, TIM_IT_Update, ENABLE);
+	//TIM_ITConfig(TIM4, TIM_IT_Update, ENABLE);
+	NVIC_EnableIRQ(TIM4_IRQn);
 }
 
 void DisableReceiver(void)
 {
 	TIM_Cmd(TIM4, DISABLE);
-	TIM_ITConfig(TIM4, TIM_IT_Update, DISABLE);
-
+	//TIM_ITConfig(TIM4, TIM_IT_Update, DISABLE);
+	NVIC_DisableIRQ(TIM4_IRQn);
 }
 
 int CheckHeader(char* rec_arr)
