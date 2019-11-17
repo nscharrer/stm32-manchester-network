@@ -30,7 +30,7 @@ void InitReceiverTimer(void)
 	TIMInitStruct.TIM_Prescaler = (RCC_Clocks.PCLK2_Frequency/1000000) - 1;
 	TIMInitStruct.TIM_CounterMode = TIM_CounterMode_Up;
 	// Set period to 0.555ms
-	TIMInitStruct.TIM_Period = 555 - 1;
+	TIMInitStruct.TIM_Period = 700 - 1;
 	TIMInitStruct.TIM_ClockDivision = TIM_CKD_DIV1;
 	TIMInitStruct.TIM_RepetitionCounter = 0;
 	TIM_TimeBaseInit(TIM4, &TIMInitStruct);
@@ -182,6 +182,9 @@ int CheckCRC(char crc_fcs)
 void ProcessReceivedMessage(void)
 {
 	DisableReceiver();
+
+	manchester_rec_arr[manchester_rec_arr_index - 1] = 0x0;
+	manchester_rec_arr_index--;
 
 	struct map *manchester_decode_table = initManchesterDecodeMap();
 
