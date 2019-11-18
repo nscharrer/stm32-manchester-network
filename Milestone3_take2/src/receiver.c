@@ -35,7 +35,6 @@ void InitReceiverTimer(void)
 	TIMInitStruct.TIM_RepetitionCounter = 0;
 	TIM_TimeBaseInit(TIM4, &TIMInitStruct);
 
-	//TIM_Cmd(TIM4, ENABLE);
 
 	TIM_ITConfig(TIM4, TIM_IT_Update, ENABLE);
 
@@ -65,37 +64,6 @@ void TIM4_IRQHandler()
 	manchester_rec_arr[manchester_rec_arr_index] = current_bit;
 
 	manchester_rec_arr_index++;
-
-
-	/**
-	switch(state) {
-		case IDLE:
-			if(current_bit == 0)
-			{
-				// Should be error as edge detection should have been caught
-			}
-			// If it is still 1, then we are still in idle, clock should be reset
-			break;
-		case BUSY:
-			if(current_bit == 0)
-			{
-				// In BUSY and timed out with the line on 0, so go to COLLISION
-				state = COLLISION;
-				LightLED(RED);
-			} else {
-				// Otherwise we timed out with the line on 1, so go back to IDLE
-				state = IDLE;
-				LightLED(GREEN);
-			}
-			break;
-		case COLLISION:
-			// TODO don't think we need to handle this yet - maybe comment out the collision transition above for testing
-			break;
-		default:
-			// TODO raise an error
-			break;
-	}
-	**/
 }
 
 void ResetTIM4Cnt(void)
@@ -124,14 +92,12 @@ void EnableReceiver(void)
 {
 
 	TIM_Cmd(TIM4, ENABLE);
-	//TIM_ITConfig(TIM4, TIM_IT_Update, ENABLE);
 	NVIC_EnableIRQ(TIM4_IRQn);
 }
 
 void DisableReceiver(void)
 {
 	TIM_Cmd(TIM4, DISABLE);
-	//TIM_ITConfig(TIM4, TIM_IT_Update, DISABLE);
 	NVIC_DisableIRQ(TIM4_IRQn);
 }
 
@@ -254,7 +220,6 @@ void ProcessReceivedMessage(void)
 		if(CheckCRC(crc_fcs) == 0)
 		{
 			int send_message_size = 20 + length;
-			//char send_message[send_message_size] = {'R', 'e', 'c', 'e', 'i', 'v', 'e', 'd', ' ', 'M', 'e', 's', 's', 'a', 'g', 'e', ':', ' '};
 			char send_message[send_message_size];
 			sprintf(send_message, "Received Message: %s", message);
 

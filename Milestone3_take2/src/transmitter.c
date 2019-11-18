@@ -48,7 +48,7 @@ void buildFrame(char *data, int size)
 	{
 		frame[i + 6] = data[i];
 	}
-	//todo check this index
+
 	frame[length + 6] = frame_crc_fcs;
 }
 
@@ -72,11 +72,6 @@ void setFrameLength(int size)
 	{
 		frame_length++;
 	}
-	// todo check this
-	//sprintf(frame_length, "%x", size);
-	//itoa(size, frame_length, 16);
-	printf("%c", frame_length);
-	//frame_length = size;
 }
 
 void InitTransmitterTimer(void)

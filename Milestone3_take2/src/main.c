@@ -26,12 +26,6 @@
 
 volatile t_state state = IDLE;
 
-void tester(void)
-{
-	char data[] = {'H', 'E', 'L', 'L', 'O', '\n', '\r', '\0'};
-	//USART2_SendData(data, strlen(data));
-	//printf("%s", data);
-}
 
 int main(void)
 {
@@ -59,7 +53,6 @@ int main(void)
 
 	InitReceiverTimer();
 
-	tester();
 	while(1)
 	{
 	}
