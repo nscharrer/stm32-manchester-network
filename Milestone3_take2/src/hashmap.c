@@ -116,7 +116,7 @@ struct map *initManchesterMap(void)
 
 	return manchester_table;
 }
-
+/**
 struct map *initManchesterDecodeMap(void)
 {
 	struct map *manchester_table = createEmptyMap(16);
@@ -137,6 +137,30 @@ struct map *initManchesterDecodeMap(void)
 	insert(manchester_table, 0x59, 0xD);
 	insert(manchester_table, 0x56, 0xE);
 	insert(manchester_table, 0x55, 0xF);
+
+	return manchester_table;
+}
+**/
+struct map *initManchesterDecodeMap(void)
+{
+	struct map *manchester_table = createEmptyMap(16);
+
+	insert(manchester_table, 0x55, 0x0);
+	insert(manchester_table, 0x95, 0x1);
+	insert(manchester_table, 0x65, 0x2);
+	insert(manchester_table, 0xA5, 0x3);
+	insert(manchester_table, 0x59, 0x4);
+	insert(manchester_table, 0x99, 0x5);
+	insert(manchester_table, 0x69, 0x6);
+	insert(manchester_table, 0xA9, 0x7);
+	insert(manchester_table, 0x56, 0x8);
+	insert(manchester_table, 0x96, 0x9);
+	insert(manchester_table, 0x66, 0xA);
+	insert(manchester_table, 0xA6, 0xB);
+	insert(manchester_table, 0x5A, 0xC);
+	insert(manchester_table, 0x9A, 0xD);
+	insert(manchester_table, 0x6A, 0xE);
+	insert(manchester_table, 0xAA, 0xF);
 
 	return manchester_table;
 }

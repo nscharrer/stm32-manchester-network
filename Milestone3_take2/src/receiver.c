@@ -29,7 +29,7 @@ void InitReceiverTimer(void)
 	// Scale the clock to 1Mhz
 	TIMInitStruct.TIM_Prescaler = (RCC_Clocks.PCLK2_Frequency/1000000) - 1;
 	TIMInitStruct.TIM_CounterMode = TIM_CounterMode_Up;
-	// Set period to 0.555ms
+	// Set period to 0.700 ms
 	TIMInitStruct.TIM_Period = 700 - 1;
 	TIMInitStruct.TIM_ClockDivision = TIM_CKD_DIV1;
 	TIMInitStruct.TIM_RepetitionCounter = 0;
@@ -156,7 +156,7 @@ int CheckHeader(char* rec_arr)
 
 	char length = rec_arr[4];
 
-	if(rec_arr[4] != 0x01)
+	if(rec_arr[5] != 0x01)
 	{
 		//todo CRC Flag - not sure if this is constant
 		return -1;
@@ -183,13 +183,21 @@ void ProcessReceivedMessage(void)
 {
 	DisableReceiver();
 
+	// Adjust the received array, the last value is extraneous from the long timer not timing out yet
 	manchester_rec_arr[manchester_rec_arr_index - 1] = 0x0;
 	manchester_rec_arr_index--;
 
 	struct map *manchester_decode_table = initManchesterDecodeMap();
 
+	// Initialize and clear the receive array
 	char rec_arr[MAX_MANCHESTER_ARR_SIZE / 2];
-	int rec_index, shift = 0;
+	int rec_index = 0;
+	for(int i = 0; i < MAX_MANCHESTER_ARR_SIZE / 2; i++)
+	{
+		rec_arr[i] = 0;
+	}
+
+	int shift = 0;
 	char current_char = 0x0;
 	// convert the manchester array that we received to the translated hex array
 	for(int i = 0; i < manchester_rec_arr_index; i++)
@@ -206,6 +214,20 @@ void ProcessReceivedMessage(void)
 		{
 			shift++;
 		}
+	}
+
+	int j = 0;
+	for(int i = 0; i < rec_index; i = i + 2)
+	{
+		current_char = 0x0;
+		current_char = rec_arr[i]<<4 | rec_arr[i+1];
+		rec_arr[j] = current_char;
+		j++;
+	}
+
+	for(j; j < rec_index; j++)
+	{
+		rec_arr[j] = 0;
 	}
 
 	int length = CheckHeader(rec_arr);
@@ -231,8 +253,16 @@ void ProcessReceivedMessage(void)
 
 		if(CheckCRC(crc_fcs) == 0)
 		{
+			int send_message_size = 20 + length;
+			//char send_message[send_message_size] = {'R', 'e', 'c', 'e', 'i', 'v', 'e', 'd', ' ', 'M', 'e', 's', 's', 'a', 'g', 'e', ':', ' '};
+			char send_message[send_message_size];
+			sprintf(send_message, "Received Message: %s", message);
+
+			send_message[send_message_size - 2] = '\r';
+			send_message[send_message_size - 1] = '\n';
+
 			//FCS check pass, print the message
-			USART2_SendData(message, strlen(message));
+			USART2_SendData(send_message, send_message_size);
 		}
 		else
 		{
