@@ -15,4 +15,8 @@ void InitTransmitGPIO(void);
 
 void formatDataAndTransmit(char data[], int size);
 
+void InitTransmitterTimer(void);
+
+char calculateCRC(char *message, int message_len);
+
 #endif /* TRANSMITTER_H_ */

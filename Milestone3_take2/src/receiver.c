@@ -103,25 +103,31 @@ void DisableReceiver(void)
 
 int CheckHeader(char* rec_arr)
 {
+	//USART2_SendData(rec_arr[0], sizeof(char));
 	if(rec_arr[0] != 0x55)
 	{
 		return -1;
 	}
 
+	//USART2_SendData(rec_arr[1], sizeof(char));
 	if(rec_arr[1] != 0x01)
 	{
 		return -1;
 	}
 
+	//USART2_SendData(rec_arr[2], sizeof(char));
 	char source = rec_arr[2];
 
+	//USART2_SendData(rec_arr[3], sizeof(char));
 	if(rec_arr[3] != MY_ADDRESS)
 	{
 		return 0;
 	}
 
+	//USART2_SendData(rec_arr[4], sizeof(char));
 	char length = rec_arr[4];
 
+	//USART2_SendData(rec_arr[5], sizeof(char));
 	if(rec_arr[5] != 0x01)
 	{
 		//todo CRC Flag - not sure if this is constant
@@ -132,10 +138,13 @@ int CheckHeader(char* rec_arr)
 	return length;
 }
 
-int CheckCRC(char crc_fcs)
+int CheckCRC(char crc_fcs, char *message, int message_len)
 {
+	char calculated_crc = calculateCRC(message, message_len);
+
+
 	//todo more elaborate checking in future
-	if(crc_fcs == 0xFF)
+	if(crc_fcs == calculated_crc)
 	{
 		return 0;
 	}
@@ -216,8 +225,9 @@ void ProcessReceivedMessage(void)
 		}
 
 		char crc_fcs = rec_arr[length + 6];
+		//USART2_SendData(crc_fcs, sizeof(char));
 
-		if(CheckCRC(crc_fcs) == 0)
+		if(CheckCRC(crc_fcs, message, length) == 0)
 		{
 			int send_message_size = 20 + length;
 			char send_message[send_message_size];

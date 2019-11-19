@@ -17,6 +17,9 @@
 
 extern t_state state;
 
+volatile int retransmitting;
+volatile int retransmission_count;
+
 static char manchester_arr[MAX_MANCHESTER_ARR_SIZE];
 static int manchester_len;
 static int manchester_index;
@@ -33,6 +36,12 @@ static char frame_length;
 static char frame_crc_flag;
 static char frame_crc_fcs;
 static char frame[MAX_FRAME_SIZE];
+
+#define POLY 0x107
+typedef uint8_t crc;
+
+#define WIDTH (8 * sizeof(crc))
+#define TOP_BIT (1 << (WIDTH - 1))
 
 void buildFrame(char *data, int size)
 {
@@ -52,11 +61,44 @@ void buildFrame(char *data, int size)
 	frame[length + 6] = frame_crc_fcs;
 }
 
-void calculateAndSetCRC(void)
+char calculateCRC(char *message, int message_len)
 {
-	// todo next milestone
+	// shift the message 8-bits for CRC-8
+	char shift_message[message_len + 1];
+	shift_message[0] = 0x0;
+	for(int i = 0; i < message_len; i++)
+	{
+		shift_message[i+1] = message[i];
+	}
+
+	crc remainder = 0;
+	for(int byte = 0; byte < message_len + 1; ++byte)
+	{
+		remainder ^= (shift_message[byte] << (WIDTH - 8));
+
+		for(uint8_t bit = 8; bit > 0; --bit)
+		{
+			if(remainder & TOP_BIT)
+			{
+				remainder = (remainder << 1) ^ POLY;
+			}
+			else
+			{
+				remainder = (remainder << 1);
+			}
+		}
+
+	}
+
+
+	return (char)remainder;
+}
+
+void setCRC(char *message, int message_len)
+{
 	frame_crc_flag = 0x01;
-	frame_crc_fcs = 0xFF;
+
+	frame_crc_fcs = calculateCRC(message, message_len);
 }
 
 void setFrameDest(char dest)
@@ -202,9 +244,11 @@ void InitTransmitGPIO(void)
 
 void formatDataAndTransmit(char *data, int size)
 {
+	retransmitting = 0;
+
 	setFrameLength(size);
 	setFrameDest(0x20);
-	calculateAndSetCRC();
+	setCRC(data, size);
 
 	buildFrame(data, size);
 
@@ -226,6 +270,9 @@ void formatDataAndTransmit(char *data, int size)
 
 	manchester_len = table_index;
 
+	// todo for testing
+	//state = COLLISION;
+
 	// Begin the sending timer if the line is IDLE
 	if(state == IDLE)
 	{
@@ -233,8 +280,17 @@ void formatDataAndTransmit(char *data, int size)
 	}
 	else
 	{
-		//TODO wait pseudorandom amount of time and then try to re-transmit message
-		// For now, just clear the array, will need the user to type another message
-		memset(manchester_arr, 0, sizeof(manchester_arr));
+		retransmitting = 1;
+		retransmission_count = 0;
+		// The state should be in collision at this point, but if not lets clear the array
+		//todo remove this
+		//if(state != COLLISION)
+		//{
+			//memset(manchester_arr, 0, sizeof(manchester_arr));
+		//}
+
+		// We are in collision, will kick back to main for the pseudorandom waiting time and retransmission
+		// todo remove, used for debugging
+		printf("Check the state.");
 	}
 }

@@ -17,6 +17,7 @@
 extern t_state state;
 extern int manchester_rec_arr_index;
 extern char manchester_rec_arr[MAX_MANCHESTER_ARR_SIZE];
+extern int retransmitting;
 
 
 void InitGpioInterrupts(void)
@@ -91,30 +92,39 @@ void EXTI9_5_IRQHandler(void)
 
 		switch(state) {
 			case IDLE:
-				// Caught an edge when in IDLE, now must be BUSY
-				state = BUSY;
-				LightLED(YELLOW);
+				if(retransmitting == 0)
+				{
+					// Caught an edge when in IDLE, now must be BUSY
+					state = BUSY;
+					LightLED(YELLOW);
 
-				InitReceiverArr();
-				EnableReceiver();
+					InitReceiverArr();
+					EnableReceiver();
 
-				manchester_rec_arr[manchester_rec_arr_index] = current_bit;
-				manchester_rec_arr_index++;
+					manchester_rec_arr[manchester_rec_arr_index] = current_bit;
+					manchester_rec_arr_index++;
+				}
 
 				break;
 			case BUSY:
-				// Edge caught while already in busy, stay there and grab the bit for the receiver
-				manchester_rec_arr[manchester_rec_arr_index] = current_bit;
-				manchester_rec_arr_index++;
+				if(retransmitting == 0)
+				{
+					// Edge caught while already in busy, stay there and grab the bit for the receiver
+					manchester_rec_arr[manchester_rec_arr_index] = current_bit;
+					manchester_rec_arr_index++;
+				}
 
 				break;
 			case COLLISION:
-				// Caught an edge in the COLLISION state, must now be back to BUSY
-				state = BUSY;
-				LightLED(YELLOW);
+				if(retransmitting == 0)
+				{
+					// Caught an edge in the COLLISION state, must now be back to BUSY
+					state = BUSY;
+					LightLED(YELLOW);
 
-				InitReceiverArr();
-				EnableReceiver();
+					InitReceiverArr();
+					EnableReceiver();
+				}
 				break;
 			default:
 				//TODO raise an error
