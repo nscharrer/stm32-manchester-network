@@ -73,6 +73,7 @@ void ResetTIM4Cnt(void)
 
 void InitReceiverArr(void)
 {
+	// Need to set the first bit to a 1 because it is missed by the edge detector out of Idle
 	manchester_rec_arr_index = 0;
 	manchester_rec_arr[manchester_rec_arr_index] = 1;
 	manchester_rec_arr_index++;
@@ -90,7 +91,6 @@ void ClearReceiverArr(void)
 
 void EnableReceiver(void)
 {
-
 	TIM_Cmd(TIM4, ENABLE);
 	NVIC_EnableIRQ(TIM4_IRQn);
 }
@@ -103,34 +103,41 @@ void DisableReceiver(void)
 
 int CheckHeader(char* rec_arr)
 {
-	//USART2_SendData(rec_arr[0], sizeof(char));
+	char print_buffer[100];
+
+	sprintf(print_buffer, "Preamble: %x\r\n", rec_arr[0]);
+	USART2_SendData(print_buffer, strlen(print_buffer));
 	if(rec_arr[0] != 0x55)
 	{
 		return -1;
 	}
 
-	//USART2_SendData(rec_arr[1], sizeof(char));
+	sprintf(print_buffer, "Version: %x\r\n", rec_arr[1]);
+	USART2_SendData(print_buffer, strlen(print_buffer));
 	if(rec_arr[1] != 0x01)
 	{
 		return -1;
 	}
 
-	//USART2_SendData(rec_arr[2], sizeof(char));
+	sprintf(print_buffer, "Source: %x\r\n", rec_arr[2]);
+	USART2_SendData(print_buffer, strlen(print_buffer));
 	char source = rec_arr[2];
 
-	//USART2_SendData(rec_arr[3], sizeof(char));
+	sprintf(print_buffer, "Destination: %x\r\n", rec_arr[3]);
+	USART2_SendData(print_buffer, strlen(print_buffer));
 	if(rec_arr[3] != MY_ADDRESS)
 	{
 		return 0;
 	}
 
-	//USART2_SendData(rec_arr[4], sizeof(char));
+	sprintf(print_buffer, "Length: %x\r\n", rec_arr[4]);
+	USART2_SendData(print_buffer, strlen(print_buffer));
 	char length = rec_arr[4];
 
-	//USART2_SendData(rec_arr[5], sizeof(char));
+	sprintf(print_buffer, "CRC Flag: %x\r\n", rec_arr[5]);
+	USART2_SendData(print_buffer, strlen(print_buffer));
 	if(rec_arr[5] != 0x01)
 	{
-		//todo CRC Flag - not sure if this is constant
 		return -1;
 	}
 
@@ -140,10 +147,9 @@ int CheckHeader(char* rec_arr)
 
 int CheckCRC(char crc_fcs, char *message, int message_len)
 {
+	// calculate the crc on the message we received and see if it matches the field in the frame
 	char calculated_crc = calculateCRC(message, message_len);
 
-
-	//todo more elaborate checking in future
 	if(crc_fcs == calculated_crc)
 	{
 		return 0;
@@ -191,6 +197,7 @@ void ProcessReceivedMessage(void)
 		}
 	}
 
+	// Each char only has one hex value, need to squash the array so each char is full
 	int j = 0;
 	for(int i = 0; i < rec_index; i = i + 2)
 	{
@@ -200,11 +207,13 @@ void ProcessReceivedMessage(void)
 		j++;
 	}
 
+	// Clear the upper part of the array to remove confusion
 	for(j; j < rec_index; j++)
 	{
 		rec_arr[j] = 0;
 	}
 
+	// Check the frame header that we received
 	int length = CheckHeader(rec_arr);
 
 	if(length == -1)
@@ -217,16 +226,22 @@ void ProcessReceivedMessage(void)
 	}
 	else
 	{
+		char print_buffer[100];
+
 		// my message, get the content, check the trailer, and print the message through the usart
 		char message[length];
 		for(int i = 0; i < length; i++)
 		{
 			message[i] = rec_arr[i + 6];
 		}
+		sprintf(print_buffer, "Message: %s\r\n", message);
+		USART2_SendData(print_buffer, strlen(print_buffer));
 
 		char crc_fcs = rec_arr[length + 6];
-		//USART2_SendData(crc_fcs, sizeof(char));
+		sprintf(print_buffer, "CRC FCS: %x\r\n", crc_fcs);
+		USART2_SendData(print_buffer, strlen(print_buffer));
 
+		// Final check, if the CRC is correct then let's print the message to Usart
 		if(CheckCRC(crc_fcs, message, length) == 0)
 		{
 			int send_message_size = 20 + length;
@@ -245,6 +260,8 @@ void ProcessReceivedMessage(void)
 			printf("FCS Check Fail.\n");
 		}
 	}
+
+	// Empty out the receiver array
 	ClearReceiverArr();
 
 }

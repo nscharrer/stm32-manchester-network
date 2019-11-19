@@ -13,6 +13,8 @@
 #include "led.h"
 
 extern t_state state;
+extern int retransmitting;
+extern int retransmission_count;
 
 void InitTimerInterrupts(void)
 {
@@ -67,22 +69,38 @@ void TIM2_IRQHandler()
 				state = COLLISION;
 				LightLED(RED);
 
-				// DisableReceiver gets rid of the message received thus far, so we want to throw out what we had until the collision
-				DisableReceiver();
-				ClearReceiverArr();
+				if(retransmitting == 0)
+				{
+					// DisableReceiver gets rid of the message received thus far, so we want to throw out what we had until the collision
+					DisableReceiver();
+					ClearReceiverArr();
+				}
+
 			}
 			else
 			{
 				// Otherwise we timed out with the line on 1, so go back to IDLE
 				state = IDLE;
 				LightLED(GREEN);
+				if(retransmitting == 0)
+				{
+					ProcessReceivedMessage();
+				}
 
-				ProcessReceivedMessage();
 			}
 
 			break;
 		case COLLISION:
-			// TODO don't think we need to handle this yet - maybe comment out the collision transition above for testing
+			// Check if we timed out on a 1, want to go back to Idle if we aren't retransmitting, or if we are and we have delayed
+			//		for at least one delay period
+			if(current_bit == 1)
+			{
+				if(retransmitting == 0 || (retransmitting == 1 && retransmission_count > 0))
+				{
+					state = IDLE;
+					LightLED(GREEN);
+				}
+			}
 			break;
 		default:
 			// TODO raise an error

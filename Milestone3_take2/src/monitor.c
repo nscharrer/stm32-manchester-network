@@ -87,7 +87,6 @@ void EXTI9_5_IRQHandler(void)
 		// Do your stuff when PC8 is changed
 
 		// Grab the current bit off the line
-		//TODO will be used in the future
 		uint8_t current_bit = ReadRX();
 
 		switch(state) {
@@ -131,7 +130,7 @@ void EXTI9_5_IRQHandler(void)
 				break;
 		}
 
-		// Reset the TIM2 timer as a new edge was detected
+		// Reset the TIM2 timer and the TIM4 timer for receiver as a new edge was detected
 		ResetTIM2Cnt();
 		ResetTIM4Cnt();
 

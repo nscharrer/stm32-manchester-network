@@ -9,6 +9,8 @@
 #include "hashmap.h"
 #include "monitor.h"
 #include "transmitter.h"
+#include "led.h"
+#include "timer.h"
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
@@ -17,6 +19,7 @@
 
 extern t_state state;
 
+// Variables to check if we are retransmitting or not
 volatile int retransmitting;
 volatile int retransmission_count;
 
@@ -29,6 +32,7 @@ static int char_index;
 #define FRAME_PREAMBLE 0x55
 #define FRAME_VERSION 0x01
 #define FRAME_SRC 0x20
+#define FRAME_DEST 0x20
 
 // static char frame_source;
 static char frame_dest;
@@ -37,6 +41,7 @@ static char frame_crc_flag;
 static char frame_crc_fcs;
 static char frame[MAX_FRAME_SIZE];
 
+// CRC polynomial and typedef
 #define POLY 0x107
 typedef uint8_t crc;
 
@@ -71,6 +76,7 @@ char calculateCRC(char *message, int message_len)
 		shift_message[i+1] = message[i];
 	}
 
+	// Calculate our CRC
 	crc remainder = 0;
 	for(int byte = 0; byte < message_len + 1; ++byte)
 	{
@@ -89,7 +95,6 @@ char calculateCRC(char *message, int message_len)
 		}
 
 	}
-
 
 	return (char)remainder;
 }
@@ -163,14 +168,11 @@ void TIM3_IRQHandler()
 	TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 	if(state == COLLISION)
 	{
-		// Collision hit, need to pause/stop transmission
-		//TODO need to implement waiting and re-transmitting
-		// For now, we will just halt the transmission and clear the array
+		// Collision hit, need to pause/stop transmission and try retransmitting
 		DisableTIM3();
-		manchester_len = 0;
-		manchester_index = 0;
-		char_index = 0;
-		memset(manchester_arr, 0, sizeof(manchester_arr));
+
+		retransmitting = 1;
+		retransmission_count = 0;
 	}
 	else if(manchester_index == manchester_len)
 	{
@@ -246,8 +248,15 @@ void formatDataAndTransmit(char *data, int size)
 {
 	retransmitting = 0;
 
+	// Clear the array in case we failed to transmit last time
+	manchester_len = 0;
+	manchester_index = 0;
+	char_index = 0;
+	memset(manchester_arr, 0, sizeof(manchester_arr));
+
+
 	setFrameLength(size);
-	setFrameDest(0x20);
+	setFrameDest(FRAME_DEST);
 	setCRC(data, size);
 
 	buildFrame(data, size);
@@ -270,8 +279,10 @@ void formatDataAndTransmit(char *data, int size)
 
 	manchester_len = table_index;
 
-	// todo for testing
+	// todo REMOVE -- for testing
+	//LightLED(RED);
 	//state = COLLISION;
+	//ResetTIM2Cnt();
 
 	// Begin the sending timer if the line is IDLE
 	if(state == IDLE)
@@ -280,17 +291,8 @@ void formatDataAndTransmit(char *data, int size)
 	}
 	else
 	{
+		// Otherwise lets get set up to try to retransmit
 		retransmitting = 1;
 		retransmission_count = 0;
-		// The state should be in collision at this point, but if not lets clear the array
-		//todo remove this
-		//if(state != COLLISION)
-		//{
-			//memset(manchester_arr, 0, sizeof(manchester_arr));
-		//}
-
-		// We are in collision, will kick back to main for the pseudorandom waiting time and retransmission
-		// todo remove, used for debugging
-		printf("Check the state.");
 	}
 }
