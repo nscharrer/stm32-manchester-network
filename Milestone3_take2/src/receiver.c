@@ -234,8 +234,13 @@ void ProcessReceivedMessage(void)
 		{
 			message[i] = rec_arr[i + 6];
 		}
-		sprintf(print_buffer, "Message: %s\r\n", message);
-		USART2_SendData(print_buffer, strlen(print_buffer));
+
+		int message_buffer_size = length + 11;
+		char message_buffer[message_buffer_size];
+		sprintf(message_buffer, "Message: %s", message);
+		message_buffer[message_buffer_size - 2] = '\r';
+		message_buffer[message_buffer_size - 1] = '\n';
+		USART2_SendData(message_buffer, message_buffer_size);
 
 		char crc_fcs = rec_arr[length + 6];
 		sprintf(print_buffer, "CRC FCS: %x\r\n", crc_fcs);

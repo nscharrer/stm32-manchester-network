@@ -3,7 +3,7 @@
 
 #include "usart.h"
 
-#define MAX_MESSAGE_LENGTH 30
+#define MAX_MESSAGE_LENGTH 255
 
 #define FRAME_OVERHEAD_SIZE 7
 
