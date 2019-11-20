@@ -2,6 +2,7 @@
 #define RECEIVER_H_
 
 #define MY_ADDRESS 0x20
+#define BROADCAST_ADDRESS 0x00
 
 void InitReceiverTimer(void);
 

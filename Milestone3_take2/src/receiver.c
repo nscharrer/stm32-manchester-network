@@ -125,7 +125,7 @@ int CheckHeader(char* rec_arr)
 
 	sprintf(print_buffer, "Destination: %x\r\n", rec_arr[3]);
 	USART2_SendData(print_buffer, strlen(print_buffer));
-	if(rec_arr[3] != MY_ADDRESS)
+	if((rec_arr[3] != MY_ADDRESS) && (rec_arr[3] != BROADCAST_ADDRESS))
 	{
 		return 0;
 	}

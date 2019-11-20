@@ -268,7 +268,7 @@ void formatDataAndTransmit(char *data, int size)
 	struct map *manchester_table = initManchesterMap();
 
 	// Loop through the full frame grabbing each hex value, getting its Manchester encoding, and adding to the array
-	for(int i = 0; i < strlen(frame); i++)
+	for(int i = 0; i < 7 + size; i++)
 	{
 		char upper = frame[i]>>4;
 		char lower = frame[i] & 0x0F;
